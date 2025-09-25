@@ -1,0 +1,63 @@
+[1mdiff --git a/IMPLEMENTATION_PLAN.md b/IMPLEMENTATION_PLAN.md[m
+[1mindex 1cdabda..556a172 100644[m
+[1m--- a/IMPLEMENTATION_PLAN.md[m
+[1m+++ b/IMPLEMENTATION_PLAN.md[m
+[36m@@ -17,23 +17,26 @@[m [mThis plan sequences the first six months of development toward the persistent sh[m
+ [m
+ ### Phase 0 – Repo Foundations[m
+ - **Deliverables:**[m
+[31m-  - Turborepo config, root linting/formatting, CI scaffolding.[m
+[31m-  - `client/` bootstrapped (Next.js, Tailwind, Zustand skeleton).[m
+[31m-  - `game-server/` Go module initialized with basic WebSocket echo.[m
+[31m-  - `/shared/types` package exporting protocol enums & DTOs.[m
+[32m+[m[32m  - [x] Turborepo config, root linting/formatting, CI scaffolding.[m
+[32m+[m[32m  - [x] `client/` bootstrapped (Next.js, Tailwind, Zustand skeleton).[m
+[32m+[m[32m  - [x] `game-server/` Go module initialized with basic WebSocket echo.[m
+[32m+[m[32m  - [x] `/shared/types` package exporting protocol enums & DTOs.[m
+ - **Testing Checkpoints:**[m
+[31m-  - CI runs ESLint, Prettier check, `tsc --noEmit`, `go test ./...` on PRs.[m
+[31m-  - Manual smoke: client dev server renders placeholder lodge scene.[m
+[31m-- ### Phase 1 – Core Flight MVP[m
+[32m+[m[32m  - [x] CI runs ESLint, Prettier check, `tsc --noEmit`, `go test ./...` on PRs.[m
+[32m+[m[32m  - [ ] Manual smoke: client dev server renders placeholder lodge scene.[m
+[32m+[m
+[32m+[m[32m### Phase 1 – Core Flight MVP[m
+ - **Deliverables:**[m
+[31m-  - Local-only flight model, checkpoint logic, race timer.[m
+[31m-  - Supabase auth flow; `profiles` migration with RLS + seed data.[m
+[31m-  - Event bus bridging React UI and Three.js engine.[m
+[31m-  - Instanced race WebSocket loop (temporary lobby server).[m
+[32m+[m[32m  - [x] Supabase email/password auth path wired to Go shard handshake.[m
+[32m+[m[32m  - [x] Baseline migrations for `profiles`, `wingsuits`, `leaderboards` with RLS.[m
+[32m+[m[32m  - [ ] Session + state plumbing (Zustand store, profile bootstrap, shard status sharing).[m
+[32m+[m[32m  - [ ] Three.js prototype scene (lodge shell, camera controls, local flight harness).[m
+[32m+[m[32m  - [ ] WebSocket player update loop (client emits `playerUpdate`, server echoes for now).[m
+[32m+[m[32m  - [ ] Profile progression view (reads Supabase data; seeds wingsuit catalogue).[m
+ - **Testing Checkpoints:**[m
+[31m-  - Unit tests for physics helpers and Supabase data layer.[m
+[31m-  - Playtest script: complete three races consecutively without disconnects.[m
+[31m-  - Load test stub: 8 simulated clients complete race via puppeteer/bot.[m
+[32m+[m[32m  - [ ] Jest/Playwright smoke: sign-in → shard `authed` status asserted.[m
+[32m+[m[32m  - [ ] Unit tests for Supabase data helpers and Go JWT validation.[m
+[32m+[m[32m  - [ ] Load-test harness stub: 8 simulated pilots cycling connection/auth.[m
+ - ### Phase 2 – Social Lodge & Parties[m
+ - **Deliverables:**[m
+   - 3rd-person lodge scene with navmesh and avatar animations.[m
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 4d7e0fd..5e27781 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -97,9 +97,10 @@[m [mThis roadmap outlines the key phases to get from project setup to a production-r[m
+ [m
+ ### Phase 1: Core Flight Racer MVP (Weeks 0-4)[m
+ [m
+[31m--   [ ] **Mono-repo & Tooling:** Initialize the workspace, configure shared types, linting, and CI checks.[m
+[31m--   [ ] **Supabase Auth & Profiles:** Ship the baseline login flow plus XP/biome tracking.[m
+[31m--   [ ] **Instanced Races:** Build the original lobby-based race experience to perfect handling and checkpoint logic.[m
+[32m+[m[32m-   [x] **Supabase Auth & Profiles:** Email/password flow wired to Supabase JWT + Go shard validation; migrations for `profiles`, `wingsuits`, `leaderboards` landed with RLS.[m
+[32m+[m[32m-   [ ] **State & Profile Plumbing:** Introduce Zustand store, profile bootstrap, shard status sharing.[m
+[32m+[m[32m-   [ ] **Flight Prototype:** Embed Three.js scene with basic controls and wingsuit harness; emit `playerUpdate` over WebSocket (echo loop first).[m
+[32m+[m[32m-   [ ] **Progression UI:** Display Supabase profile data, seed base wingsuit catalogue.[m
+ [m
+ ### Phase 2: Social Hub Integration (Weeks 4-8)[m
+ [m

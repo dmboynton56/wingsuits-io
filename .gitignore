@@ -1,0 +1,13 @@
+node_modules/
+.env
+client/.env.local
+client/.next/
+client/out/
+client/package-lock.json
+package-lock.json
+supabase/.env
+supabase/.branches/
+supabase/.temp/
+supabase/logs/
+.DS_Store
+*.log

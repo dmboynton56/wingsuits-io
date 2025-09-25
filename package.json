@@ -1,0 +1,26 @@
+{
+  "name": "wingsuits-io",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "client",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace client",
+    "build": "npm run build --workspace @wingsuits/shared && npm run build --workspace client",
+    "lint": "npm run lint --workspace client",
+    "test": "npm run test --workspace client",
+    "smoke:handshake": "tsx --tsconfig tsconfig.base.json scripts/handshake.ts"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "tsx": "^4.19.1",
+    "typescript": "^5.7.0",
+    "ws": "^8.18.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.5"
+  }
+}

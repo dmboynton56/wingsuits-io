@@ -97,12 +97,14 @@ This roadmap outlines the key phases to get from project setup to a production-r
 
 ### Phase 1: Core Flight Racer MVP (Weeks 0-4)
 
--   [ ] **Mono-repo & Tooling:** Initialize the workspace, configure shared types, linting, and CI checks.
--   [ ] **Supabase Auth & Profiles:** Ship the baseline login flow plus XP/biome tracking.
+-   [x] **Mono-repo & Tooling:** Initialize the workspace, configure shared types, linting, and CI checks.
+-   [x] **Supabase Auth & Profiles:** Ship the baseline login flow plus XP/biome tracking (email/password + Google, shard handshake).
+-   [ ] **Session State & Profile UI:** Persist auth session in Zustand, load Supabase profiles, display XP/unlocks.
 -   [ ] **Instanced Races:** Build the original lobby-based race experience to perfect handling and checkpoint logic.
 
 ### Phase 2: Social Hub Integration (Weeks 4-8)
 
+-   [ ] **Game Engine Prototype:** Stand up Three.js scene, basic wingsuit flight, and hook input loop to WebSocket updates.
 -   [ ] **Lodge Environment:** Replace menu UI with a 3rd-person lodge scene, including avatar controller.
 -   [ ] **Map Terminals:** Let players queue instanced races from physical kiosks; stub teleportation cutscenes.
 -   [ ] **Social UX:** Add party formation, emotes, and live leaderboards in the hub.

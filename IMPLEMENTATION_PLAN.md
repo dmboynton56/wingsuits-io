@@ -17,33 +17,34 @@ This plan sequences the first six months of development toward the persistent sh
 
 ### Phase 0 – Repo Foundations
 - **Deliverables:**
-  - Turborepo config, root linting/formatting, CI scaffolding.
-  - `client/` bootstrapped (Next.js, Tailwind, Zustand skeleton).
-  - `game-server/` Go module initialized with basic WebSocket echo.
-  - `/shared/types` package exporting protocol enums & DTOs.
+  - [x] Turborepo config, root linting/formatting, CI scaffolding.
+  - [x] `client/` bootstrapped (Next.js, Tailwind, Zustand skeleton).
+  - [x] `game-server/` Go module initialized with basic WebSocket echo.
+  - [x] `/shared/types` package exporting protocol enums & DTOs.
 - **Testing Checkpoints:**
-  - CI runs ESLint, Prettier check, `tsc --noEmit`, `go test ./...` on PRs.
-  - Manual smoke: client dev server renders placeholder lodge scene.
+  - [x] CI runs ESLint, Prettier check, `tsc --noEmit`, `go test ./...` on PRs.
+  - [ ] Manual smoke: client dev server renders placeholder lodge scene.
 - ### Phase 1 – Core Flight MVP
 - **Deliverables:**
-  - Local-only flight model, checkpoint logic, race timer.
-  - Supabase auth flow; `profiles` migration with RLS + seed data.
-  - Event bus bridging React UI and Three.js engine.
-  - Instanced race WebSocket loop (temporary lobby server).
+  - [x] Supabase auth flow; `profiles` migration with RLS + seed data (email/password, Google OAuth, shard handshake).
+  - [ ] Session state store and profile UI (Zustand, profile fetch, XP display).
+  - [ ] Local-only flight model, checkpoint logic, race timer.
+  - [ ] Event bus bridging React UI and Three.js engine.
+  - [ ] Instanced race WebSocket loop (temporary lobby server).
 - **Testing Checkpoints:**
-  - Unit tests for physics helpers and Supabase data layer.
-  - Playtest script: complete three races consecutively without disconnects.
-  - Load test stub: 8 simulated clients complete race via puppeteer/bot.
+  - [ ] Playwright/Node script validating login + shard authed state.
+  - [ ] Unit tests for Supabase helpers and session store.
+  - [ ] Load test stub: 8 simulated clients complete race via puppeteer/bot.
 - ### Phase 2 – Social Lodge & Parties
 - **Deliverables:**
-  - 3rd-person lodge scene with navmesh and avatar animations.
-  - Map terminal UI tied to instanced race queue.
-  - Party system (invite, accept, launch race together).
-  - Leaderboard displays pulling from Supabase `leaderboards` table.
+  - [ ] Three.js lodge scene with navmesh and avatar animations.
+  - [ ] Map terminal UI tied to instanced race queue.
+  - [ ] Party system (invite, accept, launch race together).
+  - [ ] Leaderboard displays pulling from Supabase `leaderboards` table.
 - **Testing Checkpoints:**
-  - Regression suite ensures race flow still works post-lodge.
-  - Snapshot tests for map terminal UI states.
-  - UX playtest with 5 users to evaluate social readability.
+  - [ ] Regression suite ensures race flow still works post-lodge.
+  - [ ] Snapshot tests for map terminal UI states.
+  - [ ] UX playtest with 5 users to evaluate social readability.
 - ### Phase 3 – Persistent Shard Transition
 - **Deliverables:**
   - World server upgraded to maintain persistent shard (spatial grid + interest management).
