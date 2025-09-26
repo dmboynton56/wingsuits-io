@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Supabase local development stack
+  supabase:
+    # We'll use the Supabase CLI to start this separately
+    # since it manages its own Docker containers
+    profiles:
+      - supabase-only
+
+  # Go game server
+  game-server:
+    build:
+      context: ./game-server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - SUPABASE_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+      - SUPABASE_URL=http://host.docker.internal:54321
+      - DEBUG=true
+      - LOG_LEVEL=debug
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://host.docker.internal:3000
+    volumes:
+      - ./game-server:/app
+      - /app/vendor
+    depends_on:
+      - redis
+    networks:
+      - wingsuits-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Next.js client application
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_SUPABASE_URL=http://host.docker.internal:54321
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      - NEXT_PUBLIC_GAME_SERVER_WS_URL=ws://host.docker.internal:8080
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - game-server
+    networks:
+      - wingsuits-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for future pub/sub and caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - wingsuits-net
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  wingsuits-net:
+    driver: bridge

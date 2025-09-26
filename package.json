@@ -8,10 +8,20 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace client",
+    "dev:full": "node -e \"process.platform === 'win32' ? require('child_process').spawn('scripts/dev-start.bat', [], {stdio: 'inherit', shell: true}) : require('child_process').spawn('bash', ['scripts/dev-start.sh'], {stdio: 'inherit'})\"",
+    "dev:server": "cd game-server && go run cmd/server/main.go",
+    "dev:supabase": "supabase start",
     "build": "npm run build --workspace @wingsuits/shared && npm run build --workspace client",
+    "build:server": "cd game-server && go build -o bin/server cmd/server/main.go",
     "lint": "npm run lint --workspace client",
+    "lint:server": "cd game-server && golangci-lint run",
     "test": "npm run test --workspace client",
-    "smoke:handshake": "tsx --tsconfig tsconfig.base.json scripts/handshake.ts"
+    "test:server": "cd game-server && go test ./...",
+    "smoke:handshake": "tsx --tsconfig tsconfig.base.json scripts/handshake.ts",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "stop:all": "supabase stop && echo 'Stopped all services. Kill any remaining processes manually if needed.'",
+    "setup": "node -e \"process.platform === 'win32' ? console.log('Run scripts/setup-env.sh in Git Bash or WSL') : require('child_process').spawn('bash', ['scripts/setup-env.sh'], {stdio: 'inherit'})\""
   },
   "devDependencies": {
     "dotenv": "^16.4.5",

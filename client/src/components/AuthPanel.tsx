@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useSupabaseSession } from '@/hooks/useSupabaseSession';
+import { useAuthStore } from '@/store';
 
 type AuthMode = 'sign_in' | 'sign_up';
 
 export function AuthPanel() {
-  const { session, loading } = useSupabaseSession();
+  const { session, loading, signIn, signUp, signOut } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>('sign_in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,12 +22,10 @@ export function AuthPanel() {
 
     try {
       if (mode === 'sign_up') {
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
-        if (signUpError) throw signUpError;
+        await signUp(email, password);
         setStatus('Check your email to confirm your account.');
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
+        await signIn(email, password);
         setStatus('Signed in successfully.');
       }
     } catch (err) {
@@ -40,30 +37,23 @@ export function AuthPanel() {
 
   async function handleGoogle() {
     setError(null);
-    const { error: googleError } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (googleError) {
-      setError(googleError.message);
-    }
+    // TODO: Implement OAuth via store action
+    setError('Google OAuth not yet implemented in store');
   }
 
   async function handleGuest() {
     setError(null);
-    setStatus(null);
-    setIsSubmitting(true);
-    try {
-      const { error: anonError } = await supabase.auth.signInAnonymously();
-      if (anonError) throw anonError;
-      setStatus('Guest session started. Progress limited until you create an account.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Guest login failed');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // TODO: Implement anonymous auth via store action
+    setError('Guest login not yet implemented in store');
   }
 
   async function handleSignOut() {
     setError(null);
-    await supabase.auth.signOut();
+    try {
+      await signOut();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign out failed');
+    }
   }
 
   if (loading) {

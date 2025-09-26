@@ -1,6 +1,7 @@
 node_modules/
 .env
 client/.env.local
+game-server/.env
 client/.next/
 client/out/
 client/package-lock.json
@@ -9,5 +10,7 @@ supabase/.env
 supabase/.branches/
 supabase/.temp/
 supabase/logs/
+game-server/bin/
+game-server/tmp/
 .DS_Store
 *.log

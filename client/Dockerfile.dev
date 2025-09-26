@@ -1,0 +1,16 @@
+# Development Dockerfile for Next.js client
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+EXPOSE 3000
+
+# Start development server with turbopack
+CMD ["npm", "run", "dev"]
