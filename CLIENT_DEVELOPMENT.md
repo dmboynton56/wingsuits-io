@@ -43,3 +43,53 @@ The React UI (menus, HUD, social widgets) and the Three.js engine (flight, chunk
     3.  **Engine → React:** The engine broadcasts updates like `eventBus.emit('world:chunkLoaded', { chunkId })`, `eventBus.emit('player:state', { mode: 'flying' })`, `eventBus.emit('race:checkpoint', { index })` to keep HUD and social UI synchronized.
 
 Leaning on events prevents prop drilling and keeps transient game data out of React state.
+
+## World Generation & Rendering (Three.js)
+
+### Goal
+Provide a deterministic, chunked, high-performance world that streams around the player and supports multiple camera modes, with room to evolve into biomes, rivers/ravines, and special features (e.g., volcano stamps).
+
+### Tech
+- **Three.js** for rendering (scene/camera/lights/materials).
+- **Web Workers** for off-main-thread terrain generation (typed arrays).
+
+### Core Concepts
+- **Chunks**: Square tiles in world space (e.g., 256m×256m). Load tiles near the player; unload distant ones.
+- **LOD** (Level of Detail): Near = high-res mesh; far = low-res. Skirts or stitching hide seams.
+- **Determinism**: Seed + integer tile coords + LOD produce identical geometry (client/server parity).
+
+### Module Layout (/game-engine)
+```
+/game-engine/
+  world/
+    index.ts              // bootstrap (Scene, Renderer, loop, Fog, Lights)
+    CameraRig.ts          // chase / FPV / cinematic
+    ChunkManager.ts       // loads/unloads tiles; LOD & hysteresis
+    TerrainGenerator.ts   // noise stack, domain warp, ridged noise hooks
+    Materials.ts          // shared PBR materials, tri-planar/splat shaders later
+    SkyDome.ts            // sky model & sun light bindings
+    Player.ts             // placeholder capsule; later glTF wingsuit
+  workers/
+    terrain.worker.ts     // CPU heightfield + geometry indices/normals
+```
+
+### Bootstrap (High Level)
+1. Create `<canvas>`; init `Scene`, `PerspectiveCamera`, `WebGLRenderer` (sRGB + ACES tone mapping).
+2. Add lighting: Hemisphere + Directional (sun). Set fog + clear color.
+3. Instantiate `Player`, `CameraRig`, `ChunkManager`.
+4. In loop: Update player + camera; `ChunkManager.update(player.position)`; render.
+Emit updates via event bus (e.g., `world:chunkLoaded` for UI sync).
+
+### Terrain Generation (v1 → v2)
+- **v1**: fBm noise + mild domain warp. Output positions/normals/indices.
+- **v2**: Ridged noise for mountains, tri-planar/splat materials, worker-side river carving.
+
+### Camera Modes
+- **CHASE** (default): Damped spring behind player; FOV ~75.
+- **FPV**: At player's "helmet"; subtle roll.
+- **CINEMATIC**: Pulled back, FOV ~60 for replays.
+
+### Performance Switches (Dev)
+- `WORLD_CHUNK_SIZE=256`, `WORLD_RADIUS=3`, `WORLD_LOD_NEAR=257|MID=129|FAR=65`.
+- `WORLD_WORKERS=2..4` (pool size).
+- Debug: Chunk bounds, LOD rings (tie to event bus for overlay).

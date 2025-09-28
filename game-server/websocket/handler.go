@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/wingsuits-io/game-server/internal/auth"
+	"github.com/wingsuits-io/game-server/game"
 )
 
 type Handler struct {
@@ -73,7 +73,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := auth.ValidateToken(payload.Token); err != nil {
+	if _, err := game.ValidateToken(payload.Token); err != nil {
 		log.Printf("token validation failed: %v", err)
 		conn.WriteJSON(authResult{Type: "S2C_AUTH_RESULT", Payload: struct {
 			Success bool   `json:"success"`

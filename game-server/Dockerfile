@@ -1,5 +1,5 @@
 # Development Dockerfile for Go game server
-FROM golang:1.23-alpine AS dev
+FROM golang:1.25-alpine
 
 # Install air for hot reload
 RUN go install github.com/air-verse/air@latest

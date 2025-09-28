@@ -1,0 +1,23 @@
+Yep, carving out a single deterministic ground chunk first is the right move. Here’s how I’d stage it before diving into the flight model:
+
+### Ground Chunk Stub (pre-flight)
+
+- **Config hook**: plug the `WORLD_CHUNK_SIZE` env into a new `GROUND_TEST_CHUNK` constant under `client/game-engine/world/constants.ts` (or wherever you centralize world params) so the flat tile size matches the eventual terrain radius math.
+- **Chunk primitive**: add a `GroundTestChunk` helper in `client/game-engine/world/ChunkManager.ts` (or a separate `GroundChunk.ts`) that builds a single `PlaneGeometry` or `BoxGeometry` (slightly thick to avoid z-fighting) with world-space position at (0,0,0). Apply the shared material from `Materials.ts` so we stay aligned with the rendering plan.
+- **Scene integration**: in `client/game-engine/world/index.ts`, instantiate the `GroundTestChunk` inside the bootstrap path before player spawn. Keep the API shaped like the future chunk loader (`chunk.mount(scene)`, `chunk.dispose()`), so swapping to streaming tiles later is trivial.
+- **Collision placeholder**: in `Player.ts`, drop in a simple ground clamp—if `position.y < groundHeight` snap to ground + tolerance—just to keep tests honest until real collision sampling arrives.
+- **Debug overlay**: emit an event (`world:groundReady`) so the UI/debug layer can acknowledge when the test chunk is mounted; useful sanity check once we start running automated smoke.
+
+### Flight Model & Controls (immediately after stub)
+
+- **Input mapping**: wire keyboard/mouse handling into `PlayerController` (or whichever module you have) with states for walk vs. prep-for-flight. Walking should confirm the ground plane works, then glide transitions can come next.
+- **Physics scaffold**: implement velocity integration and damping while still clamping to the test ground; once LOD tiles appear, the physics loop already exists.
+- **Camera rig**: update `CameraRig.ts` to follow the grounded movement so we can verify chase/FPV behavior before freefall.
+
+### Verification Pass
+
+- Manual walk/fly around on the flat chunk, confirm input responses and camera transitions.
+- Record a short Loom/dev clip for the weekly doc and tick the “Manual smoke” item in `IMPLEMENTATION_PLAN.md` (already marked, but this locks in evidence).
+- Queue up a lightweight Playwright step to confirm the canvas renders the ground plane before we stack more work.
+
+Once that flat chunk is behaving, the flight model work will give meaningful feedback immediately, and we’ll be ready to swap in real chunk streaming without touching the control stack. Let me know when you want to turn this plan into actual commits.

@@ -65,3 +65,24 @@ The client and world server deploy independently but share release cadence.
     -   World server: Prometheus endpoints (tick duration, outbound bandwidth, active entities). Grafana dashboards visualize interest grid health.
 -   **Error Tracking:** Sentry for client + server, correlated using shared trace IDs. Alert thresholds: >2% auth failures over 5 min, >5% chunk load errors, average tick >40ms.
 -   **Synthetic Tests:** Scheduled canary bots connect hourly, fly scripted routes, and report success via PagerDuty.
+
+## World Gen: Dev Toggles & Perf
+
+Environment (client/.env.local):
+```
+WORLD_CHUNK_SIZE=256
+WORLD_RADIUS=3
+WORLD_LOD_NEAR=257
+WORLD_LOD_MID=129
+WORLD_LOD_FAR=65
+WORLD_WORKERS=3
+WORLD_SEED=12345
+WORLD_DEBUG_OVERLAY=true
+```
+
+Tips:
+- Start radius=2; raise to 3-4 post-profiling.
+- Shared MeshStandardMaterial; no per-tile clones.
+- InstancedMesh for props; target <1k draw calls.
+- Far travel: Enable floating origin (rebase scene around player pos).
+- Test in full stack: Local chunks load sans WS; seeded via Go server.

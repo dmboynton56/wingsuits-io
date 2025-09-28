@@ -23,13 +23,14 @@ This plan sequences the first six months of development toward the persistent sh
   - [x] `/shared/types` package exporting protocol enums & DTOs.
 - **Testing Checkpoints:**
   - [x] CI runs ESLint, Prettier check, `tsc --noEmit`, `go test ./...` on PRs.
-  - [ ] Manual smoke: client dev server renders placeholder lodge scene.
+  - [x] Manual smoke: client dev server renders placeholder lodge scene.
 - ### Phase 1 – Core Flight MVP
 - **Deliverables:**
   - [x] Supabase auth flow; `profiles` migration with RLS + seed data (email/password, Google OAuth, shard handshake).
-  - [ ] Session state store and profile UI (Zustand, profile fetch, XP display).
+  - [x] Session state store and profile UI (Zustand, profile fetch, XP display) - DevPortal component created.
+  - [x] Event bus bridging React UI and Three.js engine - GameLayout/GameWorld components established.
+  - [x] Basic Three.js game engine structure - /game-engine module scaffolded with Player capsule.
   - [ ] Local-only flight model, checkpoint logic, race timer.
-  - [ ] Event bus bridging React UI and Three.js engine.
   - [ ] Instanced race WebSocket loop (temporary lobby server).
 - **Testing Checkpoints:**
   - [ ] Playwright/Node script validating login + shard authed state.
@@ -73,6 +74,43 @@ This plan sequences the first six months of development toward the persistent sh
   - Chaos drills: terminate shard pod, confirm auto-recovery.
   - Security audit of Supabase policies & WebSocket auth handling.
   - Client benchmark across target hardware matrix (desktop + Steam Deck).
+---
+
+## Milestones: World Gen & Streaming
+
+**W1 — Render Loop & Scaffolding**
+- Scene/Camera/Renderer, fog, sun, sky in /game-engine/world.
+- Placeholder Player (capsule), CameraRig (CHASE mode).
+- ✅ Acceptance: 60 fps on flat ground; resize works; event bus emits basic updates.
+
+**W2 — Chunking (No LOD)**
+- ChunkManager loads/unloads 256m tiles (radius=3) via synchronous TerrainGenerator.
+- ✅ Acceptance: Player movement streams tiles without stutter (local test).
+
+**W3 — Workers & Determinism**
+- Move TerrainGenerator to terrain.worker.ts (Transferables).
+- Seeded noise; same tile → same heights.
+- ✅ Acceptance: No hitching on chunk boundaries; determinism verified (regenerate tile).
+
+**W4 — LOD + Seams**
+- Near/Mid/Far per tile; skirts/stitching; hysteresis.
+- ✅ Acceptance: Smooth LOD transitions; no cracks on fly-in/out.
+
+**W5 — Materials & Biomes**
+- Basic PBR + height/slope tints (grass/rock); instanced props.
+- ✅ Acceptance: Coherent blends; <1k draw calls.
+
+**W6 — Features (Rivers/Ravines/Volcano Stamps)**
+- Worker-side carving/ridged noise; parametric stamps.
+- ✅ Acceptance: One river/volcano per seed; ties to biome unlocks.
+
+**W7 — Hooks for Server (Future)**
+- Stubs for world/seed, chunk_request/meta (via WS/event bus).
+- Local fallback if no server.
+- ✅ Acceptance: Toggle local vs. seeded modes without breaking play.
+
+(Integrate: W1-2 in Phase 1, W3-4 in Phase 2, W5-7 in Phases 3-4.)
+
 ---
 
 ## Cross-Cutting Workstreams

@@ -50,3 +50,32 @@ All messages, in both directions, will follow this basic structure:
     * **Type**: "S2C_RACE_EVENT"
     * **Payload**: `{ event: 'countdown' | 'checkpoint' | 'finish'; routeId: string; data?: { countdown?: number; checkpointIndex?: number; finishOrder?: { playerId: string; timeMs: number }[] }; }
 `
+
+## World/Chunk Streaming (Client ↔ Server)
+
+**Purpose**: Enable deterministic streaming and interest management. Client gens geometry locally; server seeds/validates metadata. Active post-auth; local fallback for dev.
+
+### Message Types
+
+* **world/seed** (S2C, on auth):
+  * Type: "S2C_WORLD_SEED"
+  * Payload: `{ seed: number; chunkSize: number; lod: { near: number; mid: number; far: number } }`
+
+* **world/chunk_request** (C2S):
+  * Type: "C2S_WORLD_CHUNK_REQUEST"
+  * Payload: `{ tiles: { x: number; z: number; lod: 'near' | 'mid' | 'far' }[] }`
+
+* **world/chunk_meta** (S2C):
+  * Type: "S2C_WORLD_CHUNK_META"
+  * Payload: `{ tiles: { x: number; z: number; lod: string; hash: string; biomeHint?: string }[] }` (extends S2C_WORLD_CHUNK; no geometry)
+
+* **world/chunk_unload** (C2S):
+  * Type: "C2S_WORLD_CHUNK_UNLOAD"
+  * Payload: `{ tiles: { x: number; z: number; lod: string }[] }`
+
+* **player/pose** (C2S, extend C2S_PLAYER_UPDATE):
+  * Add to payload: `{ ..., p: [number, number, number]; q: [number, number, number, number]; v?: [number, number, number] }` (for interest prefetch).
+
+**Determinism Rule**: {seed, tileX, tileZ, lod} → identical geometry. Server samples vertices for hash validation (no meshes sent v1).
+
+(Use /shared/types/world.ts for Tile/LOD interfaces.)

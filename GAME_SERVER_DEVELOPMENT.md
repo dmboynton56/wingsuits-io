@@ -41,3 +41,13 @@ This service now orchestrates a **persistent shared shard** instead of short-liv
 -   All communication is done via JSON messages.
 -   Every message **must** conform to the `WebSocketMessage` interface defined in the `/shared/types` directory.
 -   This ensures the client and server are always in sync on the data structures being sent back and forth.
+
+## World Awareness (Interest & Seeding)
+- On auth success: Send S2C_WORLD_SEED with params (deterministic for client parity).
+- Track interest set via player pose (C2S_PLAYER_UPDATE): Tiles in R_server (>= client radius) via grid/quadtree.
+- Optional: Reply C2S_WORLD_CHUNK_REQUEST with S2C_WORLD_CHUNK_META (hash/biome for prefetch/validation).
+- No geometry sent v1; sample heights internally for anti-cheat (e.g., checkpoint validation).
+
+Future:
+- Authoritative collisions (server height queries).
+- Broadcast regional rules (e.g., wind zones) as lightweight volumes.

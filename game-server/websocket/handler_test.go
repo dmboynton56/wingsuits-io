@@ -35,7 +35,7 @@ func TestAuthSuccess(t *testing.T) {
 	}
 
 	authMsg := map[string]any{
-		"type": "C2S_AUTH",
+		"type":    "C2S_AUTH",
 		"payload": map[string]string{"token": signed},
 	}
 	if err := conn.WriteJSON(authMsg); err != nil {
@@ -72,7 +72,7 @@ func TestAuthFailure(t *testing.T) {
 	t.Setenv("SUPABASE_JWT_SECRET", "secret")
 
 	authMsg := map[string]any{
-		"type": "C2S_AUTH",
+		"type":    "C2S_AUTH",
 		"payload": map[string]string{"token": "bad"},
 	}
 	if err := conn.WriteJSON(authMsg); err != nil {
