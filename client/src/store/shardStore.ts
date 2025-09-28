@@ -51,6 +51,10 @@ export const useShardStore = create<ShardState>((set, get) => ({
     ws: null,
 
     connect: (url = process.env.NEXT_PUBLIC_GAME_SERVER_WS_URL ?? 'ws://localhost:8080/ws') => {
+      // Ensure URL has /ws path
+      if (url && !url.endsWith('/ws')) {
+        url = url.endsWith('/') ? url + 'ws' : url + '/ws';
+      }
       const currentWs = get().ws;
       if (currentWs) {
         currentWs.close();
@@ -89,10 +93,11 @@ export const useShardStore = create<ShardState>((set, get) => ({
       };
 
       ws.onerror = (event) => {
-        console.error('WebSocket error:', event);
+        const errorMsg = event.type || 'WebSocket connection error';
+        console.error('WebSocket error:', errorMsg, event);
         set({ 
           connectionState: 'error', 
-          error: 'WebSocket connection error' 
+          error: errorMsg 
         });
       };
 

@@ -71,6 +71,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         if (error) {
           // If profile doesn't exist, create it
           if (error.code === 'PGRST116') {
+            // First, verify that the user exists in auth.users
+            const { data: authUser, error: authError } = await supabase.auth.getUser();
+            if (authError || !authUser.user) {
+              throw new Error('User not authenticated or session expired');
+            }
+
             const { data: newProfile, error: createError } = await supabase
               .from('profiles')
               .insert({
@@ -83,7 +89,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
               .select()
               .single();
 
-            if (createError) throw createError;
+            if (createError) {
+              console.error('Profile creation error:', createError);
+              throw new Error(`Failed to create profile: ${createError.message}`);
+            }
             set({ 
               profile: {
                 id: newProfile.id,
@@ -112,9 +121,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           loading: false 
         });
       } catch (error) {
-        console.error('Failed to fetch profile:', error);
+        const errorMsg = error instanceof Error ? error.message : 
+                        error && typeof error === 'object' && 'message' in error ? String(error.message) :
+                        'Failed to fetch profile';
+        console.error('Failed to fetch profile:', errorMsg, error);
         set({ 
-          error: error instanceof Error ? error.message : 'Failed to fetch profile',
+          error: errorMsg,
           loading: false 
         });
       }

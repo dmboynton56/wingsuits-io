@@ -15,9 +15,11 @@ export type GameEvents = Record<string, unknown> & {
   'player:teleport': { position: Vector3; rotation?: Quaternion };
   'world:requestChunk': { chunkId: string };
   'flight:setMode': { mode: MovementMode };
+  'terminal:open': undefined;
   
   // Three.js Engine → React Updates
   'world:chunkLoaded': { chunkId: string; bounds: { x: number; z: number; size: number } };
+  'world:seed': { seed: number };
   'player:stateUpdate': { 
     position: Vector3; 
     rotation: Quaternion; 
