@@ -76,59 +76,67 @@ export class TerrainGenerator {
 
   /**
    * Get height at a specific world position
-   * Current design: Dramatic cliff on the -Z side for wingsuit testing
+   * 
+   * CLEAN SLATE DESIGN (CORRECTED Z-AXIS):
+   * - Flat plateau at height=100 on NEGATIVE Z side (looking forward)
+   * - OVERHANGING cliff that curves inward as it drops
+   * - Valley floor on POSITIVE Z side (behind you)
+   * 
+   * World coordinates (corrected):
+   *   Negative Z ← Plateau (h=100) ← SPAWN HERE
+   *   ↓
+   *   Cliff Edge at Z=0 (OVERHANGS!)
+   *   ↓
+   *   Positive Z ← Valley Floor (h=0)
    */
   getHeightAt(x: number, z: number): number {
-    // === CLIFF FACE (North side, negative Z) ===
-    // Create a tall cliff at z < -20, dropping sharply to valley floor
-    const cliffEdgeZ = -20; // Where cliff starts
-    const cliffBaseZ = 20;  // Where valley floor begins
+    // Configuration
+    const PLATEAU_HEIGHT = 100;   // Height of the cliff top
+    const VALLEY_HEIGHT = 0;      // Valley floor height
+    const CLIFF_EDGE = 0;         // Where the cliff starts (Z coordinate)
+    const CLIFF_DROP_DISTANCE = 30; // How far the cliff face extends
+    const OVERHANG_AMOUNT = 15;   // How far the cliff juts out at the top
     
-    let height = 0;
+    // === PLATEAU (Negative Z side: Z < 0) ===
+    if (z < CLIFF_EDGE) {
+      // Completely flat plateau for easy testing
+      return PLATEAU_HEIGHT;
+    }
     
-    if (z < cliffEdgeZ) {
-      // On top of the cliff - high plateau
-      const plateauHeight = 80; // Tall cliff for dramatic gliding
+    // === CLIFF FACE WITH OVERHANG (Z between CLIFF_EDGE and CLIFF_EDGE + CLIFF_DROP_DISTANCE) ===
+    else if (z < CLIFF_EDGE + CLIFF_DROP_DISTANCE) {
+      // Calculate how far down the cliff we are (0 = top, 1 = bottom)
+      const cliffProgress = (z - CLIFF_EDGE) / CLIFF_DROP_DISTANCE;
       
-      // Add gentle rolling hills on plateau
-      const plateauVariation = this.fbm(x, z, 3) * 8;
+      // Create an S-curve that makes the cliff overhang at the top
+      // Using a modified sine curve that starts steep, then curves inward
+      // This makes the top portion project outward (overhang)
       
-      height = plateauHeight + plateauVariation;
+      // Custom curve: steep drop at start, then curves back inward
+      // At progress=0: height=100 (top of cliff)
+      // Early on: drops very steep (overhang feeling)
+      // Later: curve moderates (recessed cliff face)
+      // At progress=1: height=0 (valley floor)
       
-      // Taper the plateau edges (X direction) for more natural look
-      const distFromCenterX = Math.abs(x);
-      if (distFromCenterX > 60) {
-        const edgeFalloff = this.smoothstep(60, 100, distFromCenterX);
-        height *= (1 - edgeFalloff * 0.7); // Drop 70% at edges
+      let heightFactor;
+      if (cliffProgress < 0.3) {
+        // First 30%: VERY steep drop to create overhang impression
+        // Drop from 100 to about 60 very quickly
+        heightFactor = 1 - (cliffProgress / 0.3) * 0.4;
+      } else {
+        // Remaining 70%: gentler slope, curves inward
+        const adjustedProgress = (cliffProgress - 0.3) / 0.7;
+        heightFactor = 0.6 * (1 - Math.pow(adjustedProgress, 1.5));
       }
       
-    } else if (z >= cliffEdgeZ && z <= cliffBaseZ) {
-      // Cliff face - steep drop from plateau to valley
-      const cliffProgress = (z - cliffEdgeZ) / (cliffBaseZ - cliffEdgeZ);
-      const plateauHeight = 80;
-      const valleyHeight = 0;
-      
-      // Exponential falloff for dramatic cliff feel
-      const falloff = Math.pow(cliffProgress, 2.5);
-      height = plateauHeight * (1 - falloff) + valleyHeight * falloff;
-      
-      // Add rocky texture to cliff face
-      const rockDetail = this.fbm(x * 2, z * 2, 4) * 3;
-      height += rockDetail;
-      
-    } else {
-      // Valley floor (south side, positive Z)
-      // Gentle rolling terrain with some hills
-      const baseHills = this.fbm(x, z, 3) * 12;
-      const largeFolds = this.fbm(x * 0.3, z * 0.3, 2) * 18;
-      
-      height = baseHills + largeFolds;
-      
-      // Ensure valley floor is relatively low
-      height = Math.max(0, height);
+      return PLATEAU_HEIGHT * heightFactor + VALLEY_HEIGHT * (1 - heightFactor);
     }
-
-    return height;
+    
+    // === VALLEY FLOOR (Positive Z side: Z > CLIFF_EDGE + CLIFF_DROP_DISTANCE) ===
+    else {
+      // Completely flat valley floor
+      return VALLEY_HEIGHT;
+    }
   }
 
   /**
@@ -150,14 +158,17 @@ export class TerrainGenerator {
     const positions = geometry.attributes.position.array as Float32Array;
 
     // Apply heightmap
+    // PlaneGeometry starts as XY plane, we need to map to XZ plane
+    // After rotateX(-90°): original Y becomes Z, original Z becomes -Y
+    // So we need to NEGATE the z-coordinate when sampling to match world coordinates
     for (let i = 0; i < positions.length; i += 3) {
       const x = positions[i] + offsetX;
-      const z = positions[i + 1] + offsetZ;
+      const z = -(positions[i + 1] + offsetZ); // NEGATE to match visual orientation
       const y = this.getHeightAt(x, z);
-      positions[i + 2] = y; // Set Y height (was Z in plane geometry)
+      positions[i + 2] = y; // Set height into Z position (becomes Y after rotation)
     }
 
-    // Rotate to be horizontal
+    // Rotate to be horizontal (this swaps Y and Z axes)
     geometry.rotateX(-Math.PI / 2);
 
     // Recompute normals for proper lighting

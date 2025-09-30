@@ -23,8 +23,10 @@ export class WorldEngine {
   terminalMesh?: THREE.Mesh;
   private disposables: Array<() => void> = [];
   
-  // Spawn point on cliff edge for testing
-  private readonly spawnPoint = new THREE.Vector3(0, 85, -30);
+  // Spawn point on plateau (NEGATIVE Z side)
+  // Terrain layout (CORRECTED): Plateau (Z<0) → Cliff Edge (Z=0) → Cliff Face (0<Z<30) → Valley (Z>30)
+  private readonly spawnX = 0;
+  private readonly spawnZ = -10; // 10m back from cliff edge on the plateau side
 
   constructor(canvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
@@ -69,8 +71,36 @@ export class WorldEngine {
     bus.emit('world:groundReady', { size: WORLD_CHUNK_SIZE });
 
     this.player = new Player({ getGroundHeight: this.ground.getHeightAt.bind(this.ground) });
-    this.player.setPosition(this.spawnPoint); // Spawn on cliff edge
+    
+    // Calculate proper spawn height from terrain
+    const spawnHeight = this.ground.getHeightAt(this.spawnX, this.spawnZ);
+    this.player.setPosition({ x: this.spawnX, y: spawnHeight + 5, z: this.spawnZ }); // +5 to spawn above ground
+    
     this.scene.add(this.player.mesh);
+    
+    // Add visual spawn point marker (cyan beacon)
+    const spawnMarkerGeo = new THREE.CylinderGeometry(0.5, 0.5, spawnHeight + 10, 16);
+    const spawnMarkerMat = new THREE.MeshStandardMaterial({
+      color: 0x00ffff,
+      emissive: 0x00ffff,
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.3,
+    });
+    const spawnMarker = new THREE.Mesh(spawnMarkerGeo, spawnMarkerMat);
+    spawnMarker.position.set(this.spawnX, (spawnHeight + 10) / 2, this.spawnZ);
+    this.scene.add(spawnMarker);
+    
+    // Add cliff edge marker (red line at Z=0)
+    const cliffEdgeGeo = new THREE.BoxGeometry(200, 2, 2);
+    const cliffEdgeMat = new THREE.MeshStandardMaterial({
+      color: 0xff0000,
+      emissive: 0xff0000,
+      emissiveIntensity: 0.8,
+    });
+    const cliffEdgeMarker = new THREE.Mesh(cliffEdgeGeo, cliffEdgeMat);
+    cliffEdgeMarker.position.set(0, 101, 0); // Just above plateau height
+    this.scene.add(cliffEdgeMarker);
 
     this.cameraRig = new CameraRig(this.camera, this.player.mesh);
     this.chunkManager = new ChunkManager(this.scene, WORLD_CHUNK_SIZE, WORLD_RADIUS);
@@ -96,7 +126,8 @@ export class WorldEngine {
     // 'R' key to reset to spawn point
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'r') {
-        this.player.setPosition(this.spawnPoint);
+        const spawnHeight = this.ground.getHeightAt(this.spawnX, this.spawnZ);
+        this.player.setPosition({ x: this.spawnX, y: spawnHeight + 5, z: this.spawnZ });
         this.player.velocity.set(0, 0, 0);
         this.player.mode = 'walking';
         console.log('Reset to spawn point');
