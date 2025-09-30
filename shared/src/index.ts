@@ -1,7 +1,7 @@
 export type Vector3 = { x: number; y: number; z: number };
 export type Quaternion = { x: number; y: number; z: number; w: number };
 
-export type MovementMode = 'walking' | 'flying';
+export type MovementMode = 'walking' | 'gliding';
 
 export interface AuthMessage {
   type: 'C2S_AUTH';

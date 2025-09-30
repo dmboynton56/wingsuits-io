@@ -3,6 +3,7 @@
 import { GameWorld } from './GameWorld';
 import { AuthPanel } from './AuthPanel';
 import { ShardStatus } from './ShardStatus';
+import { DebugOverlay } from './DebugOverlay';
 import { useAuthStore, useProfileStore } from '@/store';
 
 /**
@@ -30,8 +31,11 @@ export function GameLayout() {
       {/* Three.js World (fullscreen) */}
       <GameWorld />
       
+      {/* Debug Overlay (top left) */}
+      <DebugOverlay />
+      
       {/* UI Overlays (positioned absolutely) */}
-      <div className="absolute top-4 left-4 space-y-4 z-10">
+      <div className="absolute top-4 right-4 space-y-4 z-10">
         <ShardStatus />
         {profile && (
           <div className="bg-black/50 rounded p-3 text-white text-sm">
@@ -43,10 +47,13 @@ export function GameLayout() {
       </div>
 
       {/* Game Controls Help */}
-      <div className="absolute bottom-4 left-4 bg-black/50 rounded p-3 text-white text-sm z-10">
+      <div className="absolute bottom-4 left-4 bg-black/50 rounded p-3 text-white text-sm z-10 pointer-events-none">
         <p><strong>Controls:</strong></p>
-        <p>WASD - Move • F - Toggle Flight • Space - Flare • Shift - Dive</p>
-        <p>Click terminal to start race</p>
+        <p>Walk: W/S Forward/Back • A/D Turn • SHIFT Sprint • SPACE Jump</p>
+        <p className="text-green-400">Glide: W Dive • S Flare • A/D Bank</p>
+        <p className="text-cyan-400">Camera: Right Click + Drag to rotate view</p>
+        <p className="text-purple-400">R - Reset to spawn point</p>
+        <p className="text-xs text-yellow-400 mt-1">Sprint + Jump off cliff to glide!</p>
       </div>
     </div>
   );

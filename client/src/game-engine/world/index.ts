@@ -22,6 +22,9 @@ export class WorldEngine {
   raycaster = new THREE.Raycaster();
   terminalMesh?: THREE.Mesh;
   private disposables: Array<() => void> = [];
+  
+  // Spawn point on cliff edge for testing
+  private readonly spawnPoint = new THREE.Vector3(0, 85, -30);
 
   constructor(canvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
@@ -33,14 +36,27 @@ export class WorldEngine {
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Lights
     const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x0f0e0d, 0.6);
     this.scene.add(hemiLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
     dirLight.position.set(100, 100, 50);
+    dirLight.castShadow = true;
+    dirLight.shadow.camera.left = -200;
+    dirLight.shadow.camera.right = 200;
+    dirLight.shadow.camera.top = 200;
+    dirLight.shadow.camera.bottom = -200;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 500;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
     this.scene.add(dirLight);
 
     // Sky stub (dome later)
@@ -53,11 +69,13 @@ export class WorldEngine {
     bus.emit('world:groundReady', { size: WORLD_CHUNK_SIZE });
 
     this.player = new Player({ getGroundHeight: this.ground.getHeightAt.bind(this.ground) });
+    this.player.setPosition(this.spawnPoint); // Spawn on cliff edge
     this.scene.add(this.player.mesh);
 
     this.cameraRig = new CameraRig(this.camera, this.player.mesh);
     this.chunkManager = new ChunkManager(this.scene, WORLD_CHUNK_SIZE, WORLD_RADIUS);
     this.checkpointSystem = new CheckpointSystem();
+    this.checkpointSystem.mount(this.scene); // Mount checkpoint visuals
 
     this.clock = new THREE.Clock();
 
@@ -72,8 +90,20 @@ export class WorldEngine {
     bus.on('game:start', () => {
       this.checkpointSystem.startRace();
       this.player.setPosition(this.checkpointSystem.route[0]);
-      this.player.mode = 'flying'; // Start flying
+      this.player.mode = 'gliding'; // Start gliding
     });
+    
+    // 'R' key to reset to spawn point
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'r') {
+        this.player.setPosition(this.spawnPoint);
+        this.player.velocity.set(0, 0, 0);
+        this.player.mode = 'walking';
+        console.log('Reset to spawn point');
+      }
+    };
+    document.addEventListener('keypress', handleKeyPress);
+    this.disposables.push(() => document.removeEventListener('keypress', handleKeyPress));
 
     // Hardcode boxes for avoid
     this.player.boxes = [new THREE.Vector3(0,10,0), /* 4 more lodge */];
@@ -112,7 +142,7 @@ export class WorldEngine {
     bus.emit('player:stateUpdate', {
       position: { x: this.player.position.x, y: this.player.position.y, z: this.player.position.z },
       rotation: { x: this.player.rotation.x, y: this.player.rotation.y, z: this.player.rotation.z, w: this.player.rotation.w },
-      mode: this.player.mode,
+      mode: this.player.mode as 'walking' | 'gliding',
       velocity: { x: this.player.velocity.x, y: this.player.velocity.y, z: this.player.velocity.z }
     });
 
@@ -132,6 +162,8 @@ export class WorldEngine {
     this.disposables = [];
     this.ground.dispose(this.scene);
     this.player.dispose();
+    this.cameraRig.dispose();
+    this.checkpointSystem.dispose();
     this.renderer.dispose();
   }
 }
